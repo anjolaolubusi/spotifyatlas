@@ -4,7 +4,8 @@ import SpotifyData from '../components/SpotifyData'
 const routes = [
   {
     path: '/',
-    redirect: { name: 'Home' }
+    name: 'Home',
+    component: SpotifyData
   }
 ]
 
