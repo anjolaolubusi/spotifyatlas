@@ -5,11 +5,6 @@ const routes = [
   {
     path: '/',
     redirect: { name: 'Home' }
-  },
-  {
-    path: '/spotifyatlas/',
-    name: 'Home',
-    component: SpotifyData
   }
 ]
 
