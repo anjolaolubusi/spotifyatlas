@@ -1,11 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SpotifyData from '../components/SpotifyData'
+import CallbackView from '../components/CallbackView'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: SpotifyData
+  },
+  {
+    path: '/callback:queryParams(.*)',
+    name: 'CallbackView',
+    component: CallbackView,
+    props: true
   }
 ]
 
