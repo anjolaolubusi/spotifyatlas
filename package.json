@@ -17,6 +17,7 @@
     "qa": "^0.0.1",
     "vue": "^3.2.13",
     "vue-chartkick": "^1.1.0",
+    "vue-google-charts": "^1.1.0",
     "vue-router": "^4.1.0",
     "vue3-cookies": "^1.0.6"
   },

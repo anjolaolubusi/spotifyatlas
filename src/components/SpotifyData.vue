@@ -3,22 +3,35 @@
     <n-button  @click="LoginToSpotify">Login</n-button>
   </div>
   <div v-if="isAuth">
-    <n-button @click="grabUserTopItems">Grab Items</n-button>
+    <n-button @click="isDone=true">Grab Items</n-button>
     <div v-if="isDone">
-    <pie-chart :data="userTopItems"></pie-chart>
+  <GChart
+  :data="userTopItems"
+  :options="chartOptions"
+  :createChart="(el, google) => new google.visualization.PieChart(el)"
+  @ready="onChartReady"
+  type="PieChart"
+  />
     </div>
   </div>
+      <!-- <GChart
+    type="PieChart"
+    :data="tempData"
+    :options="chartOptions"
+    ref="GoogleGraph"
+  /> -->
 </template>
 
 <script>
 import { NButton } from 'naive-ui'
 import axios from 'axios'
 import qs from 'qs'
-
-export default {
+import { GChart } from 'vue-google-charts'
+export default ({
   name: 'SpotifyData',
   components: {
-    NButton
+    NButton,
+    GChart
   },
   methods: {
     LoginToSpotify () {
@@ -43,6 +56,7 @@ export default {
     async grabUserTopItems () {
       if (this.userTopItems == null) {
         this.userTopItems = {}
+        this.sourceData = {}
         const res = await this.spotifyAxios.get('me/top/artists', { params: { limit: 50 } })
         let musicDBdata = null
         let countryName = ''
@@ -51,6 +65,13 @@ export default {
           // Check for HTTP ERROR 503
           if (musicDBdata.data.artists[0].area != null && musicDBdata.data.artists[0].area.type === 'Country') {
             countryName = musicDBdata.data.artists[0].area.name
+
+            if (this.sourceData[countryName] == null) {
+              this.sourceData[countryName] = [res.data.items[i].name]
+            } else {
+              this.sourceData[countryName].push(res.data.items[i].name)
+            }
+
             if (this.userTopItems[countryName] == null) {
               this.userTopItems[countryName] = 1
             } else {
@@ -60,6 +81,8 @@ export default {
           await this.pause()
         }
       }
+
+      this.userTopItems = Object.entries(this.userTopItems)
       console.log(this.userTopItems)
       this.isDone = true
     },
@@ -82,6 +105,32 @@ export default {
           .join('')
         this.spotifySHA = hashHex
       })
+    },
+    async onChartReady (chart, google) {
+      await this.grabUserTopItems()
+      const data = new google.visualization.DataTable()
+      data.addColumn('string', 'Country')
+      data.addColumn('number', 'Count')
+      data.addRows(this.userTopItems)
+      this.chartsLib = google
+      const localCopy = this.userTopItems
+      const localSourceData = this.sourceData
+      chart.setAction({
+        id: 'test',
+        text: 'This is a test',
+        action: function () {
+          const countryName = localCopy[chart.getSelection()[0].row][0]
+          console.log(countryName)
+          console.log(localSourceData[countryName])
+        }
+      })
+      chart.draw(data, {
+        title: 'Geograph Data',
+        pieHole: 0.4,
+        tooltip: { trigger: 'selection' },
+        width: 800,
+        height: 600
+      })
     }
   },
   data () {
@@ -91,7 +140,20 @@ export default {
       spotifyAxios: null,
       musicAxios: null,
       cityLookupAxios: null,
-      isDone: false
+      isDone: false,
+      chartsLib: null,
+      chartTemp: null,
+      sourceData: null,
+      tempData: [
+        ['Country', 'Data'],
+        ['United States', 29],
+        ['United Kingdom', 5],
+        ['Japan', 5],
+        ['Canada', 2],
+        ['France', 2],
+        ['Belgium', 1],
+        ['Germany', 1]
+      ]
     }
   },
   mounted () {
@@ -101,7 +163,6 @@ export default {
     this.SHA256('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     this.$cookies.set('shaVer', codeVer)
     this.$cookies.set('vueState', state)
-
     if (this.isAuth) {
       this.spotifyAxios = axios.create({
         baseURL: 'https://api.spotify.com/v1/',
@@ -123,9 +184,19 @@ export default {
         return true
       }
       return false
+    },
+    chartOptions () {
+      if (!this.chartsLib) return null
+      return {
+        title: 'Geograph Data',
+        pieHole: 0.4,
+        tooltip: { trigger: 'selection' },
+        width: 800,
+        height: 600
+      }
     }
   }
-}
+})
 </script>
 
 <style>
