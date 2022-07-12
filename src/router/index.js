@@ -10,7 +10,7 @@ const routes = [
     component: SpotifyData
   },
   {
-    path: '/Test',
+    path: '/spotifyatlas/Test',
     name: 'Test',
     component: TestView
   },
