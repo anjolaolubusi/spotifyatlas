@@ -20,6 +20,7 @@
     :options="chartOptions"
     ref="GoogleGraph"
   /> -->
+  <n-button @click="goToTest">Go To Test</n-button>
 </template>
 
 <script>
@@ -52,6 +53,9 @@ export default ({
       return new Promise(resolve => setTimeout(() => {
         resolve()
       }, 1000))
+    },
+    goToTest () {
+      this.$router.push({ name: 'Test' })
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
