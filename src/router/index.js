@@ -6,11 +6,7 @@ import TestView from '../components/TestView'
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: SpotifyData
-  },
-  {
-    path: '/spotifyatlas/',
+    alias: ['/spotifyatlas/'],
     name: 'Home',
     component: SpotifyData
   },
@@ -20,7 +16,8 @@ const routes = [
     component: TestView
   },
   {
-    path: '/callback:queryParams(.*)',
+    path: '/callback/:queryParams(.*)',
+    alias: ['/spotifyatlas/callback/:queryParams(.*)'],
     name: 'CallbackView',
     component: CallbackView,
     props: true
