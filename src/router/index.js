@@ -10,6 +10,11 @@ const routes = [
     component: SpotifyData
   },
   {
+    path: '/spotifyatlas/',
+    name: 'Home',
+    component: SpotifyData
+  },
+  {
     path: '/Test',
     name: 'Test',
     component: TestView
