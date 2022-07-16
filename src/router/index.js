@@ -22,6 +22,7 @@ const routes = [
   },
   {
     path: '/spotifyatlas/callback/',
+    alias: ['/spotifyatlas/callback/:queryParams(.*)'],
     name: 'CallbackView2',
     component: CallbackView
   }
