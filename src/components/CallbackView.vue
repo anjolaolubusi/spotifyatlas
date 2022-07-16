@@ -19,7 +19,7 @@ export default {
       data: qs.stringify({
         grant_type: 'authorization_code',
         code: this.$route.query.code,
-        redirect_uri: 'http://localhost:8080/callback/'
+        redirect_uri: this.$spotifyRedirectURL
         // client_id: '203cf6804ed64da2accc7f84ede9118c',
         // code_verifier: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
       }),

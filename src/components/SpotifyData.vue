@@ -1,4 +1,5 @@
 <template>
+
   <div v-if="!isAuth">
     <n-button  @click="LoginToSpotify">Login</n-button>
   </div>
@@ -41,7 +42,7 @@ export default ({
         {
           client_id: '203cf6804ed64da2accc7f84ede9118c',
           response_type: 'code',
-          redirect_uri: 'http://localhost:8080/callback/',
+          redirect_uri: this.$spotifyRedirectURL,
           scope: 'user-top-read playlist-read-private user-read-private',
           state: this.$cookies.get('vueState')
           // code_challenge_method: 'S256',

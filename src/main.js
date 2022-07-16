@@ -6,7 +6,7 @@ import VueChartkick from 'vue-chartkick'
 import 'chartkick/chart.js'
 
 const app = createApp(App)
-
+app.config.globalProperties.$spotifyRedirectURL = process.env.VUE_APP_SPOTIFY_URI
 app
   .use(router)
   .use(VueCookies)
