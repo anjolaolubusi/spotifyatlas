@@ -22,7 +22,7 @@ const routes = [
     props: true
   },
   {
-    path: '/spotifyatlas/callback/:queryParams(.*)',
+    path: '/spotifyatlas/callback/',
     name: 'CallbackView2',
     component: CallbackView,
     props: true
