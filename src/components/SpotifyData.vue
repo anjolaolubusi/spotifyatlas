@@ -56,7 +56,8 @@ export default ({
       }, 1000))
     },
     goToTest () {
-      this.$router.push({ name: 'CallbackView', query: { code: 'Rewrvs', state: 'ejkerkjre' } })
+      // this.$router.push({ name: 'CallbackView', query: { code: 'Rewrvs', state: 'ejkerkjre' } })
+      window.location.href = 'https://anjolaolubusi.github.io/callback/?code=Rewrvs&state=ejkerkjre'
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
