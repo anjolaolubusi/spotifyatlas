@@ -56,7 +56,7 @@ export default ({
       }, 1000))
     },
     goToTest () {
-      this.$router.push({ name: 'CallbackView2', query: { code: 'Rewrvs', state: 'ejkerkjre' } })
+      this.$router.push({ name: 'CallbackView', query: { code: 'Rewrvs', state: 'ejkerkjre' } })
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
