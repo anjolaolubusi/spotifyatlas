@@ -18,7 +18,11 @@ const routes = [
   {
     path: '/callback/',
     name: 'CallbackView',
-    alias: ['/spotifyatlas/callback/'],
+    component: CallbackView
+  },
+  {
+    path: '/spotifyatlas/callback/',
+    name: 'CallbackView2',
     component: CallbackView
   }
 ]
