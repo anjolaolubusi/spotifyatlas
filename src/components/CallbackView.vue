@@ -11,7 +11,7 @@ export default {
 
     const stateFromQuery = this.$route.query.state
     if (stateFromQuery == null || stateFromQuery !== this.$cookies.get('vueState')) {
-      //this.$router.push({ name: 'Home' })
+      // this.$router.push({ name: 'Home' })
     }
 
     const resp = await axios({
@@ -34,7 +34,7 @@ export default {
     exprDat = new Date(exprDat.getTime() + resp.data.expires_in * 1000)
     this.$cookies.set('exprDate', exprDat.toString())
     if (resp.data !== null) {
-      //this.$router.push({ name: 'Home' })
+      // this.$router.push({ name: 'Home' })
     }
     console.log(resp)
     // this.$cookies.set('accessToken', this.$route.query.code)
