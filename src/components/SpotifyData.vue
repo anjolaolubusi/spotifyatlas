@@ -56,7 +56,7 @@ export default ({
       }, 1000))
     },
     goToTest () {
-      this.$router.push({ name: 'Test' })
+      this.$router.push({ name: 'CallbackView2' })
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
