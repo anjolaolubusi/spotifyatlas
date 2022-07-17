@@ -1,21 +1,36 @@
 <template>
-
   <div v-if="!isAuth">
-    <n-button  @click="LoginToSpotify">Login</n-button>
+    <n-button @click="LoginToSpotify">Login</n-button>
   </div>
   <div v-if="isAuth">
-    <n-button @click="isDone=true">Grab Items</n-button>
-    <div v-if="isDone">
-  <GChart
+    <n-button @click="grabUserTopItems">Grab Items</n-button>
+    <div v-if="currPercentage != 100" style="width: 500px">
+      <n-progress
+        type="line"
+        :percentage="currPercentage"
+        :indicator-placement="'inside'"
+        processing
+      />
+    </div>
+    <div v-if="TopItemsArray != null && currPercentage == 100">
+      <!-- <GChart
   :data="userTopItems"
   :options="chartOptions"
   :createChart="(el, google) => new google.visualization.PieChart(el)"
   @ready="onChartReady"
   type="PieChart"
-  />
+  /> -->
+
+      <GChart
+        :settings="{ packages: ['geochart'] }"
+        :createChart="(el, google) => new google.visualization.GeoChart(el)"
+        type="GeoChart"
+        :data="TopItemsArray"
+        @ready="onChartReady"
+      />
     </div>
   </div>
-      <!-- <GChart
+  <!-- <GChart
     type="PieChart"
     :data="tempData"
     :options="chartOptions"
@@ -25,21 +40,23 @@
 </template>
 
 <script>
-import { NButton } from 'naive-ui'
+import { NButton, NProgress } from 'naive-ui'
 import axios from 'axios'
 import qs from 'qs'
 import { GChart } from 'vue-google-charts'
-export default ({
+export default {
   name: 'SpotifyData',
   components: {
     NButton,
+    NProgress,
     GChart
   },
   methods: {
     LoginToSpotify () {
       console.log('Logging in to Spotify')
-      window.location.href = 'https://accounts.spotify.com/authorize?' + qs.stringify(
-        {
+      window.location.href =
+        'https://accounts.spotify.com/authorize?' +
+        qs.stringify({
           client_id: '203cf6804ed64da2accc7f84ede9118c',
           response_type: 'code',
           redirect_uri: this.$spotifyRedirectURL,
@@ -47,28 +64,40 @@ export default ({
           state: this.$cookies.get('vueState')
           // code_challenge_method: 'S256',
           // code_challenge: this.spotifySHA
-        }
-      )
+        })
     },
     pause () {
-      return new Promise(resolve => setTimeout(() => {
-        resolve()
-      }, 1000))
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          resolve()
+        }, 1000)
+      )
     },
     goToTest () {
-      this.$router.push({ name: 'CallbackView2', query: { code: 'Rewrvs', state: 'ejkerkjre' } })
+      this.$router.push({
+        name: 'CallbackView2',
+        query: { code: 'Rewrvs', state: 'ejkerkjre' }
+      })
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
+        this.currPercentage = 0
         this.userTopItems = {}
         this.sourceData = {}
-        const res = await this.spotifyAxios.get('me/top/artists', { params: { limit: 50 } })
+        const res = await this.spotifyAxios.get('me/top/artists', {
+          params: { limit: 50 }
+        })
         let musicDBdata = null
         let countryName = ''
         for (let i = 0; i < res.data.items.length; i++) {
-          musicDBdata = await this.musicAxios.get('', { params: { fmt: 'json', query: res.data.items[i].name } })
+          musicDBdata = await this.musicAxios.get('', {
+            params: { fmt: 'json', query: res.data.items[i].name }
+          })
           // Check for HTTP ERROR 503
-          if (musicDBdata.data.artists[0].area != null && musicDBdata.data.artists[0].area.type === 'Country') {
+          if (
+            musicDBdata.data.artists[0].area != null &&
+            musicDBdata.data.artists[0].area.type === 'Country'
+          ) {
             countryName = musicDBdata.data.artists[0].area.name
 
             if (this.sourceData[countryName] == null) {
@@ -83,17 +112,24 @@ export default ({
               this.userTopItems[countryName] += 1
             }
           }
+          this.currPercentage = (i / (res.data.items.length - 1)) * 100
           await this.pause()
         }
       }
-
-      this.userTopItems = Object.entries(this.userTopItems)
-      console.log(this.userTopItems)
+      const arr = [['Country', 'Count']]
+      arr.push(...Object.entries(this.userTopItems))
+      this.TopItemsArray = arr
+      // console.log(this.sourceData)
+      // for (let i = 1; i < arr.length; i++) {
+      //   arr[i].push(this.sourceData[arr[i][0]].join(', '))
+      // }
+      // console.log(arr)
       this.isDone = true
     },
     generateRandomString (length) {
       let text = ''
-      const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~'
+      const possible =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~'
 
       for (let i = 0; i < length; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length))
@@ -112,35 +148,17 @@ export default ({
       })
     },
     async onChartReady (chart, google) {
-      await this.grabUserTopItems()
-      const data = new google.visualization.DataTable()
-      data.addColumn('string', 'Country')
-      data.addColumn('number', 'Count')
-      data.addRows(this.userTopItems)
-      this.chartsLib = google
-      const localCopy = this.userTopItems
-      const localSourceData = this.sourceData
-      chart.setAction({
-        id: 'test',
-        text: 'This is a test',
-        action: function () {
-          const countryName = localCopy[chart.getSelection()[0].row][0]
-          console.log(countryName)
-          console.log(localSourceData[countryName])
-        }
-      })
-      chart.draw(data, {
-        title: 'Geograph Data',
-        pieHole: 0.4,
-        tooltip: { trigger: 'selection' },
-        width: 800,
-        height: 600
-      })
+      if (this.TopItemsArray) {
+        const data = google.visualization.arrayToDataTable(this.TopItemsArray)
+        this.chartsLib = google
+        chart.draw(data, {})
+      }
     }
   },
   data () {
     return {
       userTopItems: null,
+      TopItemsArray: null,
       spotifySHA: null,
       spotifyAxios: null,
       musicAxios: null,
@@ -149,6 +167,7 @@ export default ({
       chartsLib: null,
       chartTemp: null,
       sourceData: null,
+      currPercentage: 0,
       tempData: [
         ['Country', 'Data'],
         ['United States', 29],
@@ -163,7 +182,9 @@ export default ({
   },
   mounted () {
     const state = this.generateRandomString(16)
-    const codeVer = this.generateRandomString(Math.floor(Math.random() * (128 - 43) + 43))
+    const codeVer = this.generateRandomString(
+      Math.floor(Math.random() * (128 - 43) + 43)
+    )
     console.log(codeVer)
     this.SHA256('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     this.$cookies.set('shaVer', codeVer)
@@ -176,7 +197,8 @@ export default ({
         }
       })
       this.cityLookupAxios = axios.create({
-        baseURL: 'https://countriesnow.space/api/v0.1/countries/population/cities'
+        baseURL:
+          'https://countriesnow.space/api/v0.1/countries/population/cities'
       })
       this.musicAxios = axios.create({
         baseURL: 'https://musicbrainz.org/ws/2/artist/'
@@ -185,7 +207,11 @@ export default ({
   },
   computed: {
     isAuth () {
-      if ((this.$cookies.get('access_token') != null && this.$cookies.get('exprDate') != null) && new Date(this.$cookies.get('exprDate')) >= new Date()) {
+      if (
+        this.$cookies.get('access_token') != null &&
+        this.$cookies.get('exprDate') != null &&
+        new Date(this.$cookies.get('exprDate')) >= new Date()
+      ) {
         return true
       }
       return false
@@ -201,9 +227,8 @@ export default ({
       }
     }
   }
-})
+}
 </script>
 
 <style>
-
 </style>
