@@ -26,8 +26,16 @@
         :createChart="(el, google) => new google.visualization.GeoChart(el)"
         type="GeoChart"
         :data="TopItemsArray"
+        :events="geoChartEvents"
         @ready="onChartReady"
       />
+      <div v-if="artistsLookup != null && isCountryDataDone == true">
+      <GChart
+      :settings="{ packages: ['corechart'] }"
+      type="BubbleChart"
+      :data="artistsLookup"
+      @ready="loadCountryPieChart" />
+      </div>
     </div>
   </div>
   <!-- <GChart
@@ -70,7 +78,7 @@ export default {
       return new Promise((resolve) =>
         setTimeout(() => {
           resolve()
-        }, 1000)
+        }, 500)
       )
     },
     goToTest () {
@@ -78,6 +86,67 @@ export default {
         name: 'CallbackView2',
         query: { code: 'Rewrvs', state: 'ejkerkjre' }
       })
+    },
+    loadCountryPieChart (chart, google) {
+      const data = google.visualization.arrayToDataTable(this.artistsLookup)
+      // const data = new google.visualization.DataTable()
+      // google.charts.setOnLoadCallback(this.loadCountryPieChart)
+      // data.addColumn('string', 'Genre')
+      // data.addColumn('number', 'Amount')
+      // data.addColumn({ type: 'string', role: 'tooltip' })
+      // const tempCopy = this.artistsLookup
+      // tempCopy.shift()
+      // console.log(tempCopy)
+      // data.addRows(tempCopy)
+      // const options = { tooltip: { trigger: 'selection' } }
+      // chart.setAction({
+      //   id: 'artist',
+      //   text: 'Test',
+      //   action: function () {
+      //     const selection = chart.getSelection()
+      //     console.log(selection)
+      //     console.log(tempCopy[selection[0].row + 1][2])
+      //   }
+      // })
+      const options = {
+
+      }
+      if (this.geoPieChart) {
+        this.geoPieChart.draw(data, options)
+      } else {
+        chart.draw(data, options)
+        this.geoPieChart = chart
+      }
+      this.isCountryDataDone = true
+    },
+    getCountryPieChartData (countryName) {
+      this.artistsLookup = null
+      this.isCountryDataDone = false
+      console.log(this.sourceData[countryName])
+      const tempTally = []
+      Object.entries(this.sourceData[countryName]).forEach(function ([key, value]) {
+        console.log(key)
+        tempTally.push([value.name, parseInt(key), value.popularity, value.genres.join(', ')])
+        // for (let i = 0; i < value.genres.length; i++) {
+        //   if (tempTally[value.genres[i]] == null) {
+        //     tempTally[value.genres[i]] = value.name
+        //   } else {
+        //     tempTally[value.genres[i]] += ', ' + value.name
+        //   }
+        // }
+      })
+      const tempData = [['Artist', 'Number of Generes', 'Popularity', 'Generes']]
+      // Object.entries(tempTally).forEach(function ([key, value]) {
+      //   tempData.push([key, value.split(', ').length, `Genre: ${key} Artists: ${value}`])
+      // })
+      tempData.push(...tempTally)
+      console.log(tempData)
+      this.artistsLookup = tempData
+      if (this.geoPieChart !== null) {
+        this.loadCountryPieChart(this.geoPieChart, this.chartsLib)
+      } else {
+        this.isCountryDataDone = true
+      }
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
@@ -101,9 +170,9 @@ export default {
             countryName = musicDBdata.data.artists[0].area.name
 
             if (this.sourceData[countryName] == null) {
-              this.sourceData[countryName] = [res.data.items[i].name]
+              this.sourceData[countryName] = [{ name: res.data.items[i].name, genres: res.data.items[i].genres, popularity: res.data.items[i].popularity }]
             } else {
-              this.sourceData[countryName].push(res.data.items[i].name)
+              this.sourceData[countryName].push({ name: res.data.items[i].name, genres: res.data.items[i].genres, popularity: res.data.items[i].popularity })
             }
 
             if (this.userTopItems[countryName] == null) {
@@ -152,6 +221,7 @@ export default {
         const data = google.visualization.arrayToDataTable(this.TopItemsArray)
         this.chartsLib = google
         chart.draw(data, {})
+        this.geoChart = chart
       }
     }
   },
@@ -164,9 +234,11 @@ export default {
       musicAxios: null,
       cityLookupAxios: null,
       isDone: false,
+      isCountryDataDone: false,
       chartsLib: null,
       chartTemp: null,
       sourceData: null,
+      artistsLookup: null,
       currPercentage: 0,
       tempData: [
         ['Country', 'Data'],
@@ -177,7 +249,23 @@ export default {
         ['France', 2],
         ['Belgium', 1],
         ['Germany', 1]
-      ]
+      ],
+      geoChart: null,
+      geoPieChart: null,
+      geoChartEvents: {
+        select: () => {
+          const userSelection = this.geoChart.getSelection()
+          if (userSelection[0] !== undefined) {
+            console.log(userSelection[0].row + 1)
+            this.artistsLookup = null
+            const newIndex = userSelection[0].row + 1
+            const countryName = this.TopItemsArray[newIndex][0]
+            console.log(this.TopItemsArray[newIndex][0])
+            this.isCountryDataDone = false
+            this.getCountryPieChartData(countryName)
+          }
+        }
+      }
     }
   },
   mounted () {
