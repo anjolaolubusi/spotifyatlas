@@ -33,7 +33,7 @@
   @ready="onChartReady"
   type="PieChart"
   /> -->
-      <n-grid x-gap="12" :cols="2">
+      <n-grid x-gap="12" cols="1 s:1 m:2 l:2 xl:2 2xl:2" responsive="screen">
         <n-grid-item>
       <div>
       <GChart
