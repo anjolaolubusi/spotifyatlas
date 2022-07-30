@@ -4,6 +4,7 @@
   </div>
   <div v-if="isAuth">
     <n-button @click="grabUserTopItems">Grab Items</n-button>
+  <n-button @click="logout">Logout</n-button>
     <n-modal :show="showLoadingModal">
           <n-card
       style="width: 500px"
@@ -32,7 +33,9 @@
   @ready="onChartReady"
   type="PieChart"
   /> -->
-
+      <n-grid x-gap="12" :cols="2">
+        <n-grid-item>
+      <div>
       <GChart
         :settings="{ packages: ['geochart'] }"
         :createChart="(el, google) => new google.visualization.GeoChart(el)"
@@ -41,6 +44,9 @@
         :events="geoChartEvents"
         @ready="onChartReady"
       />
+      </div>
+      </n-grid-item>
+      <n-grid-item>
       <div v-if="artistsLookup != null && isCountryDataDone == true">
       <GChart
       :settings="{ packages: ['corechart'] }"
@@ -48,19 +54,14 @@
       :data="artistsLookup"
       @ready="loadCountryPieChart" />
       </div>
+      </n-grid-item>
+      </n-grid>
     </div>
   </div>
-  <!-- <GChart
-    type="PieChart"
-    :data="tempData"
-    :options="chartOptions"
-    ref="GoogleGraph"
-  /> -->
-  <n-button @click="goToTest">Go To Test</n-button>
 </template>
 
 <script>
-import { NButton, NProgress, NModal, NCard } from 'naive-ui'
+import { NButton, NProgress, NModal, NCard, NGrid, NGridItem } from 'naive-ui'
 import axios from 'axios'
 import qs from 'qs'
 import { GChart } from 'vue-google-charts'
@@ -71,6 +72,8 @@ export default {
     NProgress,
     NModal,
     NCard,
+    NGrid,
+    NGridItem,
     GChart
   },
   methods: {
@@ -94,12 +97,6 @@ export default {
           resolve()
         }, 500)
       )
-    },
-    goToTest () {
-      this.$router.push({
-        name: 'CallbackView2',
-        query: { code: 'Rewrvs', state: 'ejkerkjre' }
-      })
     },
     loadCountryPieChart (chart, google) {
       const data = google.visualization.arrayToDataTable(this.artistsLookup)
@@ -239,6 +236,13 @@ export default {
         chart.draw(data, {})
         this.geoChart = chart
       }
+    },
+    logout () {
+      this.$cookies.remove('access_token')
+      this.$cookies.remove('exprDate')
+      this.$cookies.remove('shaVer')
+      this.$cookies.remove('vueState')
+      window.location.reload()
     }
   },
   data () {
@@ -336,4 +340,13 @@ export default {
 </script>
 
 <style>
+.float-container {
+  display: flex;
+}
+
+.float-child {
+    flex: 1;
+    border: 2px solid yellow;
+}
+
 </style>
