@@ -49,10 +49,11 @@
       <n-grid-item>
       <div v-if="artistsLookup != null && isCountryDataDone == true">
       <GChart
-      :settings="{ packages: ['corechart'] }"
-      type="BubbleChart"
+      :settings="{ packages: ['table'] }"
+      type="Table"
       :data="artistsLookup"
-      @ready="loadCountryPieChart" />
+      @ready="loadCountryPieChart"
+      :options="tableOptions"/>
       </div>
       </n-grid-item>
       </n-grid>
@@ -120,14 +121,17 @@ export default {
       //   }
       // })
       const options = {
-
+        sortColumn: 2,
+        sortAscending: false
       }
+      console.log(options)
       if (this.geoPieChart) {
         this.geoPieChart.draw(data, options)
       } else {
         chart.draw(data, options)
         this.geoPieChart = chart
       }
+      console.log(this.geoPieChart)
       this.isCountryDataDone = true
     },
     getCountryPieChartData (countryName) {
@@ -137,7 +141,7 @@ export default {
       const tempTally = []
       Object.entries(this.sourceData[countryName]).forEach(function ([key, value]) {
         console.log(key)
-        tempTally.push([value.name, parseInt(key), value.popularity, value.genres.join(', ')])
+        tempTally.push([value.name, value.genres.length, value.popularity, value.genres.join(', ')])
         // for (let i = 0; i < value.genres.length; i++) {
         //   if (tempTally[value.genres[i]] == null) {
         //     tempTally[value.genres[i]] = value.name
@@ -260,6 +264,10 @@ export default {
       chartTemp: null,
       sourceData: null,
       artistsLookup: null,
+      tableOptions: {
+        sortColumn: 2,
+        sortAscending: false
+      },
       currPercentage: 0,
       tempData: [
         ['Country', 'Data'],
