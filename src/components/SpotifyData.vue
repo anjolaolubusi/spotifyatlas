@@ -4,14 +4,26 @@
   </div>
   <div v-if="isAuth">
     <n-button @click="grabUserTopItems">Grab Items</n-button>
-    <div v-if="currPercentage != 100" style="width: 500px">
+    <n-modal :show="showLoadingModal">
+          <n-card
+      style="width: 500px"
+      title="Loading Data"
+      :bordered="false"
+      size="huge"
+      role="dialog"
+      aria-modal="true"
+    >
+    <!-- <div v-if="currPercentage != 100" style="width: 500px"> -->
       <n-progress
         type="line"
         :percentage="currPercentage"
         :indicator-placement="'inside'"
         processing
       />
-    </div>
+
+          </n-card>
+    <!-- </div> -->
+    </n-modal>
     <div v-if="TopItemsArray != null && currPercentage == 100">
       <!-- <GChart
   :data="userTopItems"
@@ -48,7 +60,7 @@
 </template>
 
 <script>
-import { NButton, NProgress } from 'naive-ui'
+import { NButton, NProgress, NModal, NCard } from 'naive-ui'
 import axios from 'axios'
 import qs from 'qs'
 import { GChart } from 'vue-google-charts'
@@ -57,6 +69,8 @@ export default {
   components: {
     NButton,
     NProgress,
+    NModal,
+    NCard,
     GChart
   },
   methods: {
@@ -150,6 +164,7 @@ export default {
     },
     async grabUserTopItems () {
       if (this.userTopItems == null) {
+        this.showLoadingModal = true
         this.currPercentage = 0
         this.userTopItems = {}
         this.sourceData = {}
@@ -193,6 +208,7 @@ export default {
       //   arr[i].push(this.sourceData[arr[i][0]].join(', '))
       // }
       // console.log(arr)
+      this.showLoadingModal = false
       this.isDone = true
     },
     generateRandomString (length) {
@@ -228,6 +244,7 @@ export default {
   data () {
     return {
       userTopItems: null,
+      showLoadingModal: false,
       TopItemsArray: null,
       spotifySHA: null,
       spotifyAxios: null,
