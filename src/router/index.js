@@ -11,15 +11,11 @@ const routes = [
     component: SpotifyData
   },
   {
-    path: '/Test',
-    name: 'Test',
-    component: TestView
-  },
-  {
-    path: '/callback/',
+    path: '/callback/:queryParams(.*)',
+    alias: ['/spotifyatlas/callback/:queryParams(.*)'],
     name: 'CallbackView',
     component: CallbackView
-  }
+  },
 ]
 
 const router = createRouter({
