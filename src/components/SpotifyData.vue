@@ -1,4 +1,5 @@
 <template>
+  <h3>{{dataFilterTitle}}</h3>
   <div v-if="!isAuth()">
     <n-button @click="LoginToSpotify">Login</n-button>
   </div>
@@ -6,9 +7,9 @@
     <n-space vertical>
     <n-button @click="logout" type="error">Logout</n-button>
     <n-space justify="center">
-    <n-button type="primary" @click="grabUserTopItems('short_term')">Last 4 Weeks</n-button>
-    <n-button type="primary" @click="grabUserTopItems('medium_term')">Last 6 Months</n-button>
-    <n-button type="primary" @click="grabUserTopItems('long_term')">All Time</n-button>
+    <n-button tertiary type="primary" @click="grabUserTopItems('short_term')">Last 4 Weeks</n-button>
+    <n-button tertiary type="primary" @click="grabUserTopItems('medium_term')">Last 6 Months</n-button>
+    <n-button tertiary type="primary" @click="grabUserTopItems('long_term')">All Time</n-button>
     </n-space>
     </n-space>
     <n-modal :show="showLoadingModal">
@@ -96,7 +97,7 @@ export default {
       return new Promise((resolve) =>
         setTimeout(() => {
           resolve()
-        }, 500)
+        }, 700)
       )
     },
     loadCountryPieChart (chart, google) {
@@ -139,15 +140,19 @@ export default {
       let grabFromSource = false
       switch (timeRange) {
         case 'medium_range':
+          this.dataFilterTitle = 'Last 6 Months'
           grabFromSource = (this.sixMonthsData == null)
           break
         case 'short_term':
+          this.dataFilterTitle = 'Last 4 Weeks'
           grabFromSource = (this.fourWeeksData == null)
           break
         case 'long_term':
+          this.dataFilterTitle = 'All Time'
           grabFromSource = (this.allTImesData == null)
           break
         default:
+          this.dataFilterTitle = 'Last 6 Months'
           grabFromSource = (this.sixMonthsData == null)
           break
       }
@@ -299,6 +304,7 @@ export default {
       TopItemsArray: null,
       spotifySHA: null,
       spotifyAxios: null,
+      dataFilterTitle: '',
       musicAxios: null,
       cityLookupAxios: null,
       isDone: false,
