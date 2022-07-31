@@ -3,8 +3,14 @@
     <n-button @click="LoginToSpotify">Login</n-button>
   </div>
   <div v-if="isAuth">
-    <n-button @click="grabUserTopItems">Grab Items</n-button>
-  <n-button @click="logout">Logout</n-button>
+    <n-space vertical>
+    <n-button @click="logout" type="error">Logout</n-button>
+    <n-space justify="center">
+    <n-button type="primary" @click="grabUserTopItems('short_term')">Last 4 Weeks</n-button>
+    <n-button type="primary" @click="grabUserTopItems('medium_term')">Last 6 Months</n-button>
+    <n-button type="primary" @click="grabUserTopItems('long_term')">All Time</n-button>
+    </n-space>
+    </n-space>
     <n-modal :show="showLoadingModal">
           <n-card
       style="width: 500px"
@@ -26,13 +32,6 @@
     <!-- </div> -->
     </n-modal>
     <div v-if="TopItemsArray != null && currPercentage == 100">
-      <!-- <GChart
-  :data="userTopItems"
-  :options="chartOptions"
-  :createChart="(el, google) => new google.visualization.PieChart(el)"
-  @ready="onChartReady"
-  type="PieChart"
-  /> -->
       <n-grid x-gap="12" cols="1 s:1 m:2 l:2 xl:2 2xl:2" responsive="screen">
         <n-grid-item>
       <div>
@@ -62,7 +61,7 @@
 </template>
 
 <script>
-import { NButton, NProgress, NModal, NCard, NGrid, NGridItem } from 'naive-ui'
+import { NButton, NProgress, NModal, NCard, NGrid, NGridItem, NSpace } from 'naive-ui'
 import axios from 'axios'
 import qs from 'qs'
 import { GChart } from 'vue-google-charts'
@@ -75,6 +74,7 @@ export default {
     NCard,
     NGrid,
     NGridItem,
+    NSpace,
     GChart
   },
   methods: {
@@ -87,9 +87,9 @@ export default {
           response_type: 'code',
           redirect_uri: this.$spotifyRedirectURL,
           scope: 'user-top-read playlist-read-private user-read-private',
-          state: this.$cookies.get('vueState')
-          // code_challenge_method: 'S256',
-          // code_challenge: this.spotifySHA
+          state: this.$cookies.get('vueState'),
+          code_challenge_method: 'S256',
+          code_challenge: this.spotifySHA
         })
     },
     pause () {
@@ -101,25 +101,7 @@ export default {
     },
     loadCountryPieChart (chart, google) {
       const data = google.visualization.arrayToDataTable(this.artistsLookup)
-      // const data = new google.visualization.DataTable()
-      // google.charts.setOnLoadCallback(this.loadCountryPieChart)
-      // data.addColumn('string', 'Genre')
-      // data.addColumn('number', 'Amount')
-      // data.addColumn({ type: 'string', role: 'tooltip' })
-      // const tempCopy = this.artistsLookup
-      // tempCopy.shift()
-      // console.log(tempCopy)
-      // data.addRows(tempCopy)
-      // const options = { tooltip: { trigger: 'selection' } }
-      // chart.setAction({
-      //   id: 'artist',
-      //   text: 'Test',
-      //   action: function () {
-      //     const selection = chart.getSelection()
-      //     console.log(selection)
-      //     console.log(tempCopy[selection[0].row + 1][2])
-      //   }
-      // })
+
       const options = {
         sortColumn: 2,
         sortAscending: false
@@ -142,18 +124,8 @@ export default {
       Object.entries(this.sourceData[countryName]).forEach(function ([key, value]) {
         console.log(key)
         tempTally.push([value.name, value.genres.length, value.popularity, value.genres.join(', ')])
-        // for (let i = 0; i < value.genres.length; i++) {
-        //   if (tempTally[value.genres[i]] == null) {
-        //     tempTally[value.genres[i]] = value.name
-        //   } else {
-        //     tempTally[value.genres[i]] += ', ' + value.name
-        //   }
-        // }
       })
       const tempData = [['Artist', 'Number of Generes', 'Popularity', 'Generes']]
-      // Object.entries(tempTally).forEach(function ([key, value]) {
-      //   tempData.push([key, value.split(', ').length, `Genre: ${key} Artists: ${value}`])
-      // })
       tempData.push(...tempTally)
       console.log(tempData)
       this.artistsLookup = tempData
@@ -163,14 +135,30 @@ export default {
         this.isCountryDataDone = true
       }
     },
-    async grabUserTopItems () {
-      if (this.userTopItems == null) {
+    async grabUserTopItems (timeRange) {
+      let grabFromSource = false
+      switch (timeRange) {
+        case 'medium_range':
+          grabFromSource = (this.sixMonthsData == null)
+          break
+        case 'short_term':
+          grabFromSource = (this.fourWeeksData == null)
+          break
+        case 'long_term':
+          grabFromSource = (this.allTImesData == null)
+          break
+        default:
+          grabFromSource = (this.sixMonthsData == null)
+          break
+      }
+
+      if (grabFromSource) {
         this.showLoadingModal = true
         this.currPercentage = 0
         this.userTopItems = {}
         this.sourceData = {}
         const res = await this.spotifyAxios.get('me/top/artists', {
-          params: { limit: 50 }
+          params: { limit: 50, time_range: `${timeRange}` }
         })
         let musicDBdata = null
         let countryName = ''
@@ -200,15 +188,58 @@ export default {
           this.currPercentage = (i / (res.data.items.length - 1)) * 100
           await this.pause()
         }
+        const arr = [['Country', 'Count']]
+        arr.push(...Object.entries(this.userTopItems))
+        this.TopItemsArray = arr
+
+        switch (timeRange) {
+          case 'medium_range':
+            this.sixMonthsData = {
+              topItemsArray: this.TopItemsArray,
+              sourceData: this.sourceData
+            }
+            break
+          case 'short_term':
+            this.fourWeeksData = {
+              topItemsArray: this.TopItemsArray,
+              sourceData: this.sourceData
+            }
+            break
+          case 'long_term':
+            this.allTImesData = {
+              topItemsArray: this.TopItemsArray,
+              sourceData: this.sourceData
+            }
+            break
+          default:
+            this.sixMonthsData = {
+              topItemsArray: this.TopItemsArray,
+              sourceData: this.sourceData
+            }
+            break
+        }
+      } else {
+        switch (timeRange) {
+          case 'medium_range':
+            this.TopItemsArray = this.sixMonthsData.topItemsArray
+            this.sourceData = this.sixMonthsData.sourceData
+            break
+          case 'short_term':
+            this.TopItemsArray = this.fourWeeksData.topItemsArray
+            this.sourceData = this.fourWeeksData.sourceData
+            break
+          case 'long_term':
+            this.TopItemsArray = this.allTImesData.topItemsArray
+            this.sourceData = this.allTImesData.sourceData
+            break
+          default:
+            this.TopItemsArray = this.sixMonthsData.topItemsArray
+            this.sourceData = this.sixMonthsData.sourceData
+            break
+        }
+        this.artistsLookup = null
       }
-      const arr = [['Country', 'Count']]
-      arr.push(...Object.entries(this.userTopItems))
-      this.TopItemsArray = arr
-      // console.log(this.sourceData)
-      // for (let i = 1; i < arr.length; i++) {
-      //   arr[i].push(this.sourceData[arr[i][0]].join(', '))
-      // }
-      // console.log(arr)
+
       this.showLoadingModal = false
       this.isDone = true
     },
@@ -225,13 +256,18 @@ export default {
     async SHA256 (message) {
       const encoder = new TextEncoder()
       const data = encoder.encode(message)
-      await window.crypto.subtle.digest('SHA-256', data).then((hashBuffer) => {
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const hashHex = hashArray
-          .map((bytes) => bytes.toString(16).padStart(2, '0'))
-          .join('')
-        this.spotifySHA = hashHex
-      })
+      const digest = window.crypto.subtle.digest('SHA-256', data)
+      return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+      // await window.crypto.subtle.digest('SHA-256', data).then((hashBuffer) => {
+      //   const hashArray = Array.from(new Uint8Array(hashBuffer))
+      //   const hashHex = hashArray
+      //     .map((bytes) => bytes.toString(16).padStart(2, '0'))
+      //     .join('')
+      //   this.spotifySHA = hashHex
+      // })
     },
     async onChartReady (chart, google) {
       if (this.TopItemsArray) {
@@ -252,6 +288,9 @@ export default {
   data () {
     return {
       userTopItems: null,
+      allTImesData: null,
+      sixMonthsData: null,
+      fourWeeksData: null,
       showLoadingModal: false,
       TopItemsArray: null,
       spotifySHA: null,
@@ -269,16 +308,6 @@ export default {
         sortAscending: false
       },
       currPercentage: 0,
-      tempData: [
-        ['Country', 'Data'],
-        ['United States', 29],
-        ['United Kingdom', 5],
-        ['Japan', 5],
-        ['Canada', 2],
-        ['France', 2],
-        ['Belgium', 1],
-        ['Germany', 1]
-      ],
       geoChart: null,
       geoPieChart: null,
       geoChartEvents: {
@@ -303,7 +332,8 @@ export default {
       Math.floor(Math.random() * (128 - 43) + 43)
     )
     console.log(codeVer)
-    this.SHA256('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    this.spotifySHA = this.SHA256(codeVer)
+    console.log(this.spotifySHA)
     this.$cookies.set('shaVer', codeVer)
     this.$cookies.set('vueState', state)
     if (this.isAuth) {
@@ -320,6 +350,11 @@ export default {
       this.musicAxios = axios.create({
         baseURL: 'https://musicbrainz.org/ws/2/artist/'
       })
+    } else {
+      this.$cookies.remove('access_token')
+      this.$cookies.remove('exprDate')
+      this.$cookies.remove('shaVer')
+      this.$cookies.remove('vueState')
     }
   },
   computed: {

@@ -19,9 +19,9 @@ export default {
       data: qs.stringify({
         grant_type: 'authorization_code',
         code: this.$route.query.code,
-        redirect_uri: this.$spotifyRedirectURL
-        // client_id: '203cf6804ed64da2accc7f84ede9118c',
-        // code_verifier: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+        redirect_uri: this.$spotifyRedirectURL,
+        client_id: '203cf6804ed64da2accc7f84ede9118c',
+        code_verifier: this.$cookies.get('shaVer')
       }),
       url: 'https://accounts.spotify.com/api/token',
       headers: {
