@@ -10,9 +10,19 @@ const routes = [
     component: SpotifyData
   },
   {
+    path: '/spotifyatlas/',
+    name: 'HomeProd',
+    component: SpotifyData
+  },
+  {
     path: '/callback/:queryParams(.*)',
     alias: ['/spotifyatlas/callback/:queryParams(.*)'],
     name: 'CallbackView',
+    component: CallbackView
+  },
+  {
+    path: '/spotifyatlas/callback/:queryParams(.*)',
+    name: 'CallbackViewProd',
     component: CallbackView
   }
 ]

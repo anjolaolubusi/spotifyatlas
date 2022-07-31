@@ -356,6 +356,7 @@ export default {
       this.$cookies.remove('shaVer')
       this.$cookies.remove('vueState')
     }
+    console.log(process.env.NODE_ENV)
   },
   computed: {
     isAuth () {
