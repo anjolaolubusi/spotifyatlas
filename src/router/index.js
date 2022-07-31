@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SpotifyData from '../components/SpotifyData'
 import CallbackView from '../components/CallbackView'
-import TestView from '../components/TestView'
 
 const routes = [
   {
@@ -15,7 +14,7 @@ const routes = [
     alias: ['/spotifyatlas/callback/:queryParams(.*)'],
     name: 'CallbackView',
     component: CallbackView
-  },
+  }
 ]
 
 const router = createRouter({
