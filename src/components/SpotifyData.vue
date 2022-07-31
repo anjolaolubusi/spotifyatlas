@@ -1,8 +1,8 @@
 <template>
-  <div v-if="!isAuth">
+  <div v-if="!isAuth()">
     <n-button @click="LoginToSpotify">Login</n-button>
   </div>
-  <div v-if="isAuth">
+  <div v-if="isAuth()">
     <n-space vertical>
     <n-button @click="logout" type="error">Logout</n-button>
     <n-space justify="center">
@@ -261,13 +261,6 @@ export default {
         .replace(/=/g, '')
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
-      // await window.crypto.subtle.digest('SHA-256', data).then((hashBuffer) => {
-      //   const hashArray = Array.from(new Uint8Array(hashBuffer))
-      //   const hashHex = hashArray
-      //     .map((bytes) => bytes.toString(16).padStart(2, '0'))
-      //     .join('')
-      //   this.spotifySHA = hashHex
-      // })
     },
     async onChartReady (chart, google) {
       if (this.TopItemsArray) {
@@ -277,6 +270,16 @@ export default {
         this.geoChart = chart
       }
     },
+    isAuth () {
+      if (
+        this.$cookies.get('access_token') != null &&
+        this.$cookies.get('exprDate') != null &&
+        new Date(this.$cookies.get('exprDate')) >= new Date()
+      ) {
+        return true
+      }
+      return false
+    },
     logout () {
       this.$cookies.remove('access_token')
       this.$cookies.remove('exprDate')
@@ -284,6 +287,7 @@ export default {
       this.$cookies.remove('vueState')
       window.location.reload()
     }
+
   },
   data () {
     return {
@@ -336,7 +340,8 @@ export default {
     console.log(this.spotifySHA)
     this.$cookies.set('shaVer', codeVer)
     this.$cookies.set('vueState', state)
-    if (this.isAuth) {
+    if (this.isAuth()) {
+      console.log('ISAUTH')
       this.spotifyAxios = axios.create({
         baseURL: 'https://api.spotify.com/v1/',
         headers: {
@@ -359,16 +364,6 @@ export default {
     console.log(process.env.NODE_ENV)
   },
   computed: {
-    isAuth () {
-      if (
-        this.$cookies.get('access_token') != null &&
-        this.$cookies.get('exprDate') != null &&
-        new Date(this.$cookies.get('exprDate')) >= new Date()
-      ) {
-        return true
-      }
-      return false
-    },
     chartOptions () {
       if (!this.chartsLib) return null
       return {

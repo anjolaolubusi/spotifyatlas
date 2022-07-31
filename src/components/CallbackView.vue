@@ -11,11 +11,8 @@ export default {
 
     const stateFromQuery = this.$route.query.state
     if (stateFromQuery == null || stateFromQuery !== this.$cookies.get('vueState')) {
-      if (process.env.NODE_ENV === 'development') {
-        this.$router.push({ name: 'Home' })
-      } else {
-        this.$router.push({ name: 'HomeProd' })
-      }
+      const dest = process.env.NODE_ENV === 'production' ? 'HomeProd' : 'Home'
+      this.$router.push({ name: dest })
     }
 
     const resp = await axios({
@@ -38,11 +35,8 @@ export default {
     exprDat = new Date(exprDat.getTime() + resp.data.expires_in * 1000)
     this.$cookies.set('exprDate', exprDat.toString())
     if (resp.data !== null) {
-      if (process.env.NODE_ENV === 'development') {
-        this.$router.push({ name: 'Home' })
-      } else {
-        this.$router.push({ name: 'HomeProd' })
-      }
+      const dest = process.env.NODE_ENV === 'production' ? 'HomeProd' : 'Home'
+      this.$router.go({ name: dest })
     }
     console.log(resp)
     // this.$cookies.set('accessToken', this.$route.query.code)
